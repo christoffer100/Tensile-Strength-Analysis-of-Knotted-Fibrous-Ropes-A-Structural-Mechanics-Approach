@@ -353,17 +353,16 @@ end
 
 # Energy contributions structure
 mutable struct Energy
-    
     strain_energy::Float64
     kinetic_energy::Float64
     contact_energy::Float64
-    
+    max_strain_energy::Float64
 end
 
 # Constructor of the structure containing the energy contributions
 function Energy()
     
-    return Energy(0, 0, 0)
+    return Energy(0, 0, 0,0)
     
 end
 
@@ -392,6 +391,7 @@ mutable struct VTKData
     
     max_strain_energy::Float64
     total_strain_energy::Float64
+    load_scale::Float64
 end
 
 function VTKData(nbeams, output_dir, sdf, intermediate_points = 5)
@@ -427,7 +427,7 @@ function VTKData(nbeams, output_dir, sdf, intermediate_points = 5)
     
     collection = paraview_collection("$output_dir/simulation")
     
-    return VTKData(collection, output_dir, intermediate_points, interpolated_points, interpolated_lines, stress, strain,strain_energy, displacement, velocity, contact_distance, normal_contact_force, tangential_contact_force, tangential_velocity, incontact, status,0,0)
+    return VTKData(collection, output_dir, intermediate_points, interpolated_points, interpolated_lines, stress, strain,strain_energy, displacement, velocity, contact_distance, normal_contact_force, tangential_contact_force, tangential_velocity, incontact, status,0.0,0.0,1.0)
     
 end
 

@@ -1,3 +1,43 @@
+
+function energy_limiter(ψ, ψ_soft, ψ_max; floor=0.05)
+    if ψ ≤ ψ_soft
+        return 1.0
+    elseif ψ ≥ ψ_max
+        return floor
+    else
+        ξ = (ψ - ψ_soft) / (ψ_max - ψ_soft)
+        return floor + (1 - floor) * (1 - ξ)^2
+    end
+end
+
+
+function advance_load!(control, dt)
+    @assert haskey(control, :max_strain_energy)
+    @assert haskey(control, :E)
+    @assert haskey(control, :T_ramp)
+
+    
+    ψ = control[:max_strain_energy]
+    E = control[:E]
+
+    ε_soft = get(control, :ε_soft, 0.03)
+    ε_max  = get(control, :ε_max,  0.06)
+
+
+    ψ_soft = 0.5 * E * ε_soft^2
+    ψ_max  = 0.5 * E * ε_max^2
+
+    scale = energy_limiter(ψ, ψ_soft, ψ_max)
+
+    # Base increment (always positive)
+    Δλ₀ = dt / control[:T_ramp]
+
+    # STRICTLY positive, but slowed
+    control[:lambda] += scale * Δλ₀
+    control[:lambda] = min(control[:lambda], 1.0)
+end
+
+
 "Preallocates and initialises all the variables and starts the temporal loop"
 function solver!(conf, params, control)
 
@@ -112,7 +152,6 @@ function solver!(conf, params, control)
                     write_counter += 1
                     write_t = tⁿ⁺¹
                 end
- 
                 
             end 
 
@@ -132,8 +171,12 @@ function solver!(conf, params, control)
                 update_nodes_converged!(nodes, solⁿ, matrices)
                 t = tⁿ⁺¹
                 step += 1
-                
+                if haskey(control, :lambda)
+                    control[:max_strain_energy] = energy.max_strain_energy
+                    advance_load!(control, Δt)
+                end     
             end 
+
 
             if stop_on_energy_threshold && energy.kinetic_energy < energy_threshold
                 printstyled((@sprintf "Energy threshold reached! Ending simulation at tcomp = %1.2e.\n" tcomp); color = :green) 

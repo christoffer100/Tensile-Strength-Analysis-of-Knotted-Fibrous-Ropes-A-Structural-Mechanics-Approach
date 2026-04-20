@@ -44,6 +44,8 @@ function write_VTK(write_counter, step, t, conf, energy, vtkdata, control)
 end 
 
 
+
+
 function recompute_at_gausspts!(vtkdata, nodes, beams, sdf, contact, control)
     nb = length(beams)
     max_energy_beam = zeros(Float64, nb)
@@ -105,15 +107,11 @@ function recompute_at_gausspts!(vtkdata, nodes, beams, sdf, contact, control)
             E = beams[bi].properties.E
             ψ = 0.5 * E * ε^2
             vtkdata.strain_energy[k] = ψ
-
-
             vtkdata.strain[k] = ε
             vtkdata.stress[k] = E * ε
             
             
-            ψ_max_local = max(ψ_max_local, ψ)   
-            Δs = l₀ / (vtkdata.intermediate_points - 1)
-            ψ_sum_local += ψ * Δs
+            
 
 
 
@@ -153,23 +151,9 @@ function recompute_at_gausspts!(vtkdata, nodes, beams, sdf, contact, control)
                     vtkdata.incontact[k] = 1
                 end
             end
-            
-            max_energy_beam[bi] = ψ_max_local
-            total_energy_beam[bi] = ψ_sum_local
-
-
-
-            k += 1
+            #k += 1
 
         end
-        
-        vtkdata.max_strain_energy = maximum(max_energy_beam)
-        vtkdata.total_strain_energy = sum(total_energy_beam)
-        
-
-        control[:max_strain_energy] = vtkdata.max_strain_energy
-
-
     end
 
 end

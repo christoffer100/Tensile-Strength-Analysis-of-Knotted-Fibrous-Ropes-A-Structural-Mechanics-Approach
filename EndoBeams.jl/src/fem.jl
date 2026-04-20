@@ -1310,6 +1310,7 @@ function assemble!(conf, matrices, energy, params, Δt)
     energy.strain_energy = 0
     energy.kinetic_energy = 0
     energy.contact_energy = 0
+    energy.max_strain_energy = 0.0
 
     #Preparing constants
     gausspoints_info = (params.nᴳ, params.ωᴳ, params.zᴳ)
@@ -1352,6 +1353,12 @@ function assemble!(conf, matrices, energy, params, Δt)
             energy.strain_energy +=  strain_energy
             energy.kinetic_energy += kinetic_energy
             energy.contact_energy += contact_energy
+            
+            energy.max_strain_energy = max(
+                energy.max_strain_energy,
+                strain_energy
+            )
+
 
             matrices.Tᵏ[idofs] += Tᵏ
             matrices.Tⁱⁿᵗ[idofs] += Tⁱⁿᵗ
